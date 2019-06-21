@@ -36,13 +36,13 @@ namespace Neo.UnitTests
 
         protected override TValue GetInternal(TKey key)
         {
-            if (_defaultValue == null) throw new NotImplementedException();
-            return _defaultValue;
+            if (this._defaultValue == null) throw new NotImplementedException();
+            return this._defaultValue;
         }
 
         protected override TValue TryGetInternal(TKey key)
         {
-            return _defaultValue;
+            return this._defaultValue;
         }
 
         protected override void UpdateInternal(TKey key, TValue value)

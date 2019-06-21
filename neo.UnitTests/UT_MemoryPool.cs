@@ -76,7 +76,7 @@ namespace Neo.UnitTests
             for (int i = 0; i < count; i++)
             {
                 var txToAdd = isHighPriority ? CreateMockHighPriorityTransaction() : CreateMockLowPriorityTransaction();
-                Console.WriteLine($"created tx: {txToAdd.Hash}");
+                // Console.WriteLine($"created tx: {txToAdd.Hash}");
                 _unit.TryAdd(txToAdd.Hash, txToAdd);
             }
         }
@@ -91,7 +91,7 @@ namespace Neo.UnitTests
             AddLowPriorityTransactions(50);
             _unit.VerifiedCount.ShouldBeEquivalentTo(50);
             AddLowPriorityTransactions(51);
-            Console.WriteLine($"VerifiedCount: {_unit.VerifiedCount}  LowPrioCount {_unit.SortedLowPrioTxCount}  HighPrioCount {_unit.SortedHighPrioTxCount}");
+            // Console.WriteLine($"VerifiedCount: {_unit.VerifiedCount}  LowPrioCount {_unit.SortedLowPrioTxCount}  HighPrioCount {_unit.SortedHighPrioTxCount}");
             _unit.SortedLowPrioTxCount.ShouldBeEquivalentTo(100);
             _unit.SortedHighPrioTxCount.ShouldBeEquivalentTo(0);
 
@@ -106,7 +106,7 @@ namespace Neo.UnitTests
             // Add over the capacity items, verify that the verified count increases each time
             AddHighPriorityTransactions(101);
 
-            Console.WriteLine($"VerifiedCount: {_unit.VerifiedCount}  LowPrioCount {_unit.SortedLowPrioTxCount}  HighPrioCount {_unit.SortedHighPrioTxCount}");
+            // Console.WriteLine($"VerifiedCount: {_unit.VerifiedCount}  LowPrioCount {_unit.SortedLowPrioTxCount}  HighPrioCount {_unit.SortedHighPrioTxCount}");
             _unit.SortedLowPrioTxCount.ShouldBeEquivalentTo(0);
             _unit.SortedHighPrioTxCount.ShouldBeEquivalentTo(100);
 
@@ -122,7 +122,7 @@ namespace Neo.UnitTests
             AddLowPriorityTransactions(70);
             AddHighPriorityTransactions(40);
 
-            Console.WriteLine($"VerifiedCount: {_unit.VerifiedCount}  LowPrioCount {_unit.SortedLowPrioTxCount}  HighPrioCount {_unit.SortedHighPrioTxCount}");
+            // Console.WriteLine($"VerifiedCount: {_unit.VerifiedCount}  LowPrioCount {_unit.SortedLowPrioTxCount}  HighPrioCount {_unit.SortedHighPrioTxCount}");
             _unit.SortedLowPrioTxCount.ShouldBeEquivalentTo(60);
             _unit.SortedHighPrioTxCount.ShouldBeEquivalentTo(40);
             _unit.Count.ShouldBeEquivalentTo(100);

@@ -65,7 +65,7 @@ namespace Neo.UnitTests
             };
             //TimeProvider.Current.UtcNow.ToTimestamp().Should().Be(4244941711); //1968-06-01 00:00:15
 
-            Console.WriteLine($"time 0: {timeValues[0].ToString()} 1: {timeValues[1].ToString()} 2: {timeValues[2].ToString()} 3: {timeValues[3].ToString()}");
+            // Console.WriteLine($"time 0: {timeValues[0].ToString()} 1: {timeValues[1].ToString()} 2: {timeValues[2].ToString()} 3: {timeValues[3].ToString()}");
 
             //mockConsensusContext.Object.block_received_time = new DateTime(1968, 06, 01, 0, 0, 1, DateTimeKind.Utc);
             //mockConsensusContext.Setup(mr => mr.GetUtcNow()).Returns(new DateTime(1968, 06, 01, 0, 0, 15, DateTimeKind.Utc));
@@ -91,7 +91,7 @@ namespace Neo.UnitTests
             TestUtils.SetupHeaderWithValues(header, UInt256.Zero, out UInt256 merkRootVal, out UInt160 val160, out uint timestampVal, out uint indexVal, out ulong consensusDataVal, out Witness scriptVal);
             header.Size.Should().Be(109);
 
-            Console.WriteLine($"header {header} hash {header.Hash} timstamp {timestampVal}");
+            // Console.WriteLine($"header {header} hash {header.Hash} timstamp {timestampVal}");
 
             timestampVal.Should().Be(4244941696); //1968-06-01 00:00:00
                                                   // check basic ConsensusContext
@@ -134,7 +134,7 @@ namespace Neo.UnitTests
                                      Akka.Actor.Props.Create(() => new ConsensusService(subscriber, subscriber, mockConsensusContext.Object))
                                      );
 
-            Console.WriteLine("will trigger OnPersistCompleted!");
+            // Console.WriteLine("will trigger OnPersistCompleted!");
             actorConsensus.Tell(new Blockchain.PersistCompleted
             {
                 Block = new Block
@@ -151,15 +151,15 @@ namespace Neo.UnitTests
 
             // OnPersist will not launch timer, we need OnStart
 
-            Console.WriteLine("will start consensus!");
+            // Console.WriteLine("will start consensus!");
             actorConsensus.Tell(new ConsensusService.Start());
 
-            Console.WriteLine("OnTimer should expire!");
-            Console.WriteLine("Waiting for subscriber message!");
+            // Console.WriteLine("OnTimer should expire!");
+            // Console.WriteLine("Waiting for subscriber message!");
             // Timer should expire in one second (block_received_time at :01, initialized at :02)
 
             var answer = subscriber.ExpectMsg<LocalNode.SendDirectly>();
-            Console.WriteLine($"MESSAGE 1: {answer}");
+            // Console.WriteLine($"MESSAGE 1: {answer}");
             //var answer2 = subscriber.ExpectMsg<LocalNode.SendDirectly>(); // expects to fail!
 
             // ============================================================================

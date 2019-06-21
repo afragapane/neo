@@ -3,6 +3,8 @@ using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.VM;
 using Neo.VM.Types;
+using System;
+using System.IO;
 
 namespace Neo.SmartContract
 {
@@ -13,17 +15,20 @@ namespace Neo.SmartContract
         private readonly long gas_amount;
         private long gas_consumed = 0;
         private readonly bool testMode;
-        private readonly Snapshot snapshot;
+        public readonly Snapshot snapshot;
+
+        public readonly bool skipWitnessVerify;
 
         public Fixed8 GasConsumed => new Fixed8(gas_consumed);
         public new NeoService Service => (NeoService)base.Service;
 
-        public ApplicationEngine(TriggerType trigger, IScriptContainer container, Snapshot snapshot, Fixed8 gas, bool testMode = false)
+        public ApplicationEngine(TriggerType trigger, IScriptContainer container, Snapshot snapshot, Fixed8 gas, bool testMode = false, bool skipWitnessVerify = false)
             : base(container, Cryptography.Crypto.Default, snapshot, new NeoService(trigger, snapshot))
         {
             this.gas_amount = gas_free + gas.GetData();
             this.testMode = testMode;
             this.snapshot = snapshot;
+            this.skipWitnessVerify = skipWitnessVerify;
         }
 
         private bool CheckDynamicInvoke()
@@ -79,7 +84,7 @@ namespace Neo.SmartContract
                         var item = CurrentContext.EvaluationStack.Peek();
 
                         int n;
-                        if (item is Array array) n = array.Count;
+                        if (item is Neo.VM.Types.Array array) n = array.Count;
                         else n = (int)item.GetBigInteger();
 
                         if (n < 1) return 1;
@@ -95,6 +100,7 @@ namespace Neo.SmartContract
             uint api_hash = instruction.Operand.Length == 4
                 ? instruction.TokenU32
                 : instruction.TokenString.ToInteropMethodHash();
+            // Console.WriteLine(instruction.TokenString);
             long price = Service.GetPrice(api_hash);
             if (price > 0) return price;
             if (api_hash == "Neo.Asset.Create".ToInteropMethodHash() ||
@@ -132,8 +138,54 @@ namespace Neo.SmartContract
 
         protected override bool PreExecuteInstruction()
         {
+            var instruction = CurrentContext.CurrentInstruction;
             if (CurrentContext.InstructionPointer >= CurrentContext.Script.Length)
                 return true;
+
+            if (instruction.OpCode == OpCode.SYSCALL) {
+                using (StreamWriter sw = File.AppendText("/Users/alexfrag/Documents/Development/NEO/nixtest/neo/neo.UnitTests/callDump.txt")) 
+                {
+                    // sw.WriteLine(CurrentContext.CurrentInstruction.TokenString + " : " + gas_consumed.ToString());
+                    sw.WriteLine(CurrentContext.CurrentInstruction.TokenString);
+                }	
+                // Console.WriteLine(gas_consumed.ToString());
+            }
+            // if (CurrentContext.CurrentInstruction.OpCode == OpCode.NUMEQUAL) {
+            //     var val1 = CurrentContext.EvaluationStack.Peek();
+            //     var val2 = CurrentContext.EvaluationStack.Peek(1);
+            //     var valsEq = val1.GetBigInteger() == val2.GetBigInteger();
+            //     Console.WriteLine("NUMEQUAL " + val1.GetByteArray().ToHexString() + " : " + val2.GetByteArray().ToHexString() + " : " + valsEq);
+            //     // Console.WriteLine(val1.GetBigInteger());
+            //     // Console.WriteLine(val2.GetBigInteger());
+            // }
+
+            // if (CurrentContext.CurrentInstruction.OpCode == OpCode.JMPIF) {
+            //     var val = CurrentContext.EvaluationStack.Peek();
+            //     Console.WriteLine("JMPIF " + val.GetBoolean());
+            // }
+
+            if (instruction.OpCode.ToString() == "CALL_ED") {
+                Console.WriteLine(instruction.OpCode.ToString());
+                var rvCount = instruction.Operand[0];
+                var pCount = instruction.Operand[1];
+                var scriptHash = CurrentContext.EvaluationStack.Peek();
+                Console.WriteLine("rvCount: " + rvCount);
+                Console.WriteLine("pCount: " + pCount);
+                Console.WriteLine("scriptHash: " + scriptHash.GetByteArray().ToHexString());
+            }
+
+            // using (StreamWriter sw = File.AppendText("/Users/alexfrag/Documents/Development/NEO/nixtest/neo/neo.UnitTests/callDump.txt")) 
+            //     {
+            //         var op = CurrentContext.CurrentInstruction.OpCode;
+            //         var opString = op.ToString();
+            //         if ((int)op > 1 && (int)op < 75) {
+            //             opString = "PUSHBYTES" + op.ToString();
+            //         }
+            //         if (opString == "PUSHT") {
+            //             opString = "PUSH1";
+            //         }
+            //         sw.WriteLine(opString);
+            //     }	            
             gas_consumed = checked(gas_consumed + GetPrice() * ratio);
             if (!testMode && gas_consumed > gas_amount) return false;
             if (!CheckDynamicInvoke()) return false;
@@ -141,7 +193,7 @@ namespace Neo.SmartContract
         }
 
         public static ApplicationEngine Run(byte[] script, Snapshot snapshot,
-            IScriptContainer container = null, Block persistingBlock = null, bool testMode = false, Fixed8 extraGAS = default(Fixed8))
+            IScriptContainer container = null, Block persistingBlock = null, bool testMode = false, Fixed8 extraGAS = default(Fixed8), bool skipWitnessVerify = false)
         {
             snapshot.PersistingBlock = persistingBlock ?? snapshot.PersistingBlock ?? new Block
             {
@@ -159,7 +211,8 @@ namespace Neo.SmartContract
                 },
                 Transactions = new Transaction[0]
             };
-            ApplicationEngine engine = new ApplicationEngine(TriggerType.Application, container, snapshot, extraGAS, testMode);
+            ApplicationEngine engine = new ApplicationEngine(TriggerType.Application, container, snapshot, extraGAS, testMode, skipWitnessVerify);
+            Console.WriteLine("Created Application Engine.");
             engine.LoadScript(script);
             engine.Execute();
             return engine;

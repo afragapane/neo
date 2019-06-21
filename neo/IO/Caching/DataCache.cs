@@ -15,7 +15,7 @@ namespace Neo.IO.Caching
             public TrackState State;
         }
 
-        private readonly Dictionary<TKey, Trackable> dictionary = new Dictionary<TKey, Trackable>();
+        public readonly Dictionary<TKey, Trackable> dictionary = new Dictionary<TKey, Trackable>();
 
         public TValue this[TKey key]
         {
@@ -23,6 +23,7 @@ namespace Neo.IO.Caching
             {
                 lock (dictionary)
                 {
+                    // Console.WriteLine("GETTING");
                     if (dictionary.TryGetValue(key, out Trackable trackable))
                     {
                         if (trackable.State == TrackState.Deleted)
@@ -148,6 +149,7 @@ namespace Neo.IO.Caching
         {
             lock (dictionary)
             {
+                // Console.WriteLine("GETANDCHANGE");
                 if (dictionary.TryGetValue(key, out Trackable trackable))
                 {
                     if (trackable.State == TrackState.Deleted)
@@ -188,6 +190,7 @@ namespace Neo.IO.Caching
         {
             lock (dictionary)
             {
+                // Console.WriteLine("GETORADD");
                 if (dictionary.TryGetValue(key, out Trackable trackable))
                 {
                     if (trackable.State == TrackState.Deleted)

@@ -63,7 +63,7 @@ namespace Neo.UnitTests
             var result = method();
             sw0.Stop();
             TimeSpan elapsed = sw0.Elapsed;
-            Console.WriteLine($"Elapsed={elapsed} Sum={result}");
+            // Console.WriteLine($"Elapsed={elapsed} Sum={result}");
             return (elapsed, result);
         }
 

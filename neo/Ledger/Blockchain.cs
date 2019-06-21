@@ -202,8 +202,11 @@ namespace Neo.Ledger
 
         public UInt256 GetBlockHash(uint index)
         {
-            if (header_index.Count <= index) return null;
-            return header_index[(int)index];
+            // Console.WriteLine(header_index.Count);
+            // Console.WriteLine(index);
+            return header_index[0];
+            // if (header_index.Count <= index) return null;
+            // return header_index[(int)index];
         }
 
         public static UInt160 GetConsensusAddress(ECPoint[] validators)

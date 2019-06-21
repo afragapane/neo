@@ -19,6 +19,8 @@ namespace Neo.SmartContract
         public NeoService(TriggerType trigger, Snapshot snapshot)
             : base(trigger, snapshot)
         {
+            // Console.WriteLine("Initializing NeoService!");
+
             Register("Neo.Runtime.GetTrigger", Runtime_GetTrigger, 1);
             Register("Neo.Runtime.CheckWitness", Runtime_CheckWitness, 200);
             Register("Neo.Runtime.Notify", Runtime_Notify, 1);
@@ -163,6 +165,8 @@ namespace Neo.SmartContract
             Register("AntShares.Storage.Put", Storage_Put);
             Register("AntShares.Storage.Delete", Storage_Delete, 100);
             #endregion
+
+            // Console.WriteLine("Initialized NeoService!");
         }
 
         private bool Blockchain_GetAccount(ExecutionEngine engine)

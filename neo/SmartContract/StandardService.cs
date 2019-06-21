@@ -33,6 +33,8 @@ namespace Neo.SmartContract
 
         public StandardService(TriggerType trigger, Snapshot snapshot)
         {
+            // Console.WriteLine("Initializing StandardService!");
+
             this.Trigger = trigger;
             this.Snapshot = snapshot;
             Register("System.ExecutionEngine.GetScriptContainer", ExecutionEngine_GetScriptContainer, 1);
@@ -126,18 +128,23 @@ namespace Neo.SmartContract
 
         protected bool ExecutionEngine_GetExecutingScriptHash(ExecutionEngine engine)
         {
+
             engine.CurrentContext.EvaluationStack.Push(engine.CurrentContext.ScriptHash);
             return true;
         }
 
         protected bool ExecutionEngine_GetCallingScriptHash(ExecutionEngine engine)
         {
+            Console.WriteLine("Calling ScriptHash");
+            Console.WriteLine(engine.CallingContext.ScriptHash.ToHexString());
             engine.CurrentContext.EvaluationStack.Push(engine.CallingContext?.ScriptHash ?? new byte[0]);
             return true;
         }
 
         protected bool ExecutionEngine_GetEntryScriptHash(ExecutionEngine engine)
         {
+            Console.WriteLine("Entry ScriptHash");
+            Console.WriteLine(engine.EntryContext.ScriptHash.ToHexString());
             engine.CurrentContext.EvaluationStack.Push(engine.EntryContext.ScriptHash);
             return true;
         }
@@ -168,6 +175,10 @@ namespace Neo.SmartContract
 
         protected bool Runtime_CheckWitness(ExecutionEngine engine)
         {
+            if (((ApplicationEngine)engine).skipWitnessVerify) {
+                engine.CurrentContext.EvaluationStack.Push(true);
+                return true;
+            } 
             byte[] hashOrPubkey = engine.CurrentContext.EvaluationStack.Pop().GetByteArray();
             bool result;
             if (hashOrPubkey.Length == 20)
@@ -183,6 +194,20 @@ namespace Neo.SmartContract
         protected bool Runtime_Notify(ExecutionEngine engine)
         {
             StackItem state = engine.CurrentContext.EvaluationStack.Pop();
+            if (state is Neo.VM.Types.Array) {
+                var array = (Neo.VM.Types.Array)state;
+                Console.WriteLine(array[0].GetString());
+                using (StreamWriter sw = File.AppendText("/Users/alexfrag/Documents/Development/NEO/nixtest/neo/neo.UnitTests/callDump.txt")) 
+                {
+                    sw.WriteLine(array[0].GetString());
+                }	
+            } else {
+                Console.WriteLine(state.GetString());
+                using (StreamWriter sw = File.AppendText("/Users/alexfrag/Documents/Development/NEO/nixtest/neo/neo.UnitTests/callDump.txt")) 
+                {
+                    sw.WriteLine(state.GetString());
+                }	
+            }
             NotifyEventArgs notification = new NotifyEventArgs(engine.ScriptContainer, new UInt160(engine.CurrentContext.ScriptHash), state);
             Notify?.Invoke(this, notification);
             notifications.Add(notification);
@@ -399,8 +424,9 @@ namespace Neo.SmartContract
         {
             byte[] data = engine.CurrentContext.EvaluationStack.Pop().GetByteArray();
             UInt256 hash;
-            if (data.Length <= 5)
+            if (data.Length <= 5) {
                 hash = Blockchain.Singleton.GetBlockHash((uint)new BigInteger(data));
+            }
             else if (data.Length == 32)
                 hash = new UInt256(data);
             else
@@ -590,15 +616,19 @@ namespace Neo.SmartContract
         protected bool Storage_Get(ExecutionEngine engine)
         {
             if (engine.CurrentContext.EvaluationStack.Pop() is InteropInterface _interface)
-            {
+            {   
                 StorageContext context = _interface.GetInterface<StorageContext>();
+                // Console.WriteLine("Storage_Get");
                 if (!CheckStorageContext(context)) return false;
                 byte[] key = engine.CurrentContext.EvaluationStack.Pop().GetByteArray();
+                // Console.WriteLine(key.ToHexString());
                 StorageItem item = Snapshot.Storages.TryGet(new StorageKey
                 {
                     ScriptHash = context.ScriptHash,
                     Key = key
                 });
+                // Console.WriteLine(item == null);
+                // Console.WriteLine(item?.Value.ToHexString());
                 engine.CurrentContext.EvaluationStack.Push(item?.Value ?? new byte[0]);
                 return true;
             }
@@ -673,11 +703,14 @@ namespace Neo.SmartContract
 
         protected bool Storage_Put(ExecutionEngine engine)
         {
+            // Console.WriteLine("Storage_Put");
             if (!(engine.CurrentContext.EvaluationStack.Pop() is InteropInterface _interface))
                 return false;
             StorageContext context = _interface.GetInterface<StorageContext>();
             byte[] key = engine.CurrentContext.EvaluationStack.Pop().GetByteArray();
             byte[] value = engine.CurrentContext.EvaluationStack.Pop().GetByteArray();
+            // Console.WriteLine(key.ToHexString());
+            // Console.WriteLine(value.ToHexString());
             return PutEx(context, key, value, StorageFlags.None);
         }
 

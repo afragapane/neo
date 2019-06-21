@@ -59,7 +59,7 @@ namespace Neo.UnitTests
             PoolItem pitem1 = new PoolItem(tx1.Object);
             PoolItem pitem2 = new PoolItem(tx2.Object);
 
-            Console.WriteLine($"item1 time {pitem1.Timestamp} item2 time {pitem2.Timestamp}");
+            // Console.WriteLine($"item1 time {pitem1.Timestamp} item2 time {pitem2.Timestamp}");
             // pitem1 < pitem2 (fee) => -1
             pitem1.CompareTo(pitem2).Should().Be(-1);
             // pitem2 > pitem1 (fee) => 1
